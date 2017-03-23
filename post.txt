@@ -1,0 +1,32 @@
+{"title":"Test Task", "date":"2017-03-20", "project":8}
+{"title":"Test Task User Test", "date":"2017-03-29", "project":4}
+{"title":"Two Task from User Test", "date":"2017-03-25", "project":5}
+
+#update task
+{"id":"5", "title":"Two Task from User Test 222", "date":"2017-03-25", "project":4}
+
+#delete task
+{"id": 5}
+
+
+# Project
+{"name":"Job 22", "color": "#f8f8f8"}
+
+# login
+{"username":"root", "password":"123"}
+{"username":"test", "password":"test"}
+
+
+    task = Task.get_item(task_id, current_user.id)
+
+    if not task:
+        return jsonify({"message": "Can't find task with id - `{id}`".format(id=task_id)}), 404
+
+    task, errors = task_schema.load(request.json, instance=task)
+
+    if errors:
+        return jsonify(errors), 400
+
+    task.save()
+
+    return jsonify(task_schema.dumps(task).data), 200
