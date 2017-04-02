@@ -50,7 +50,7 @@ class User(BaseModel):
 
 
 class Project(BaseModel):
-    name = pw.CharField(max_length=100, unique=True)
+    name = pw.CharField(max_length=100)
     color = pw.CharField(max_length=100)
     user = pw.ForeignKeyField(User)
 

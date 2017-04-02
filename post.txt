@@ -8,13 +8,12 @@
 #delete task
 {"id": 5}
 
-
 # Project
 {"name":"Job 22", "color": "#f8f8f8"}
 
 # login
 {"username":"root", "password":"123"}
-{"username":"test", "password":"test"}
+{"username":"test2", "password":"test2"}
 
 
     task = Task.get_item(task_id, current_user.id)

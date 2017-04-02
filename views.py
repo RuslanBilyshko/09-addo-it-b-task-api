@@ -1,50 +1,46 @@
-from decorators import is_auth
 from flask import Flask, request, jsonify, g
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required
 from var_dump import var_dump
 
 from models import User, Project, Task, initialize
 from schemas import user_schema, project_schema, task_schema
-
 from flask_cors import CORS
+from flask.ext.jwt import JWT, jwt_required, current_identity
 
 app = Flask(__name__)
 app.secret_key = 'super secret key'
 CORS(app=app)
 
-login_manager = LoginManager(app)
+app.config['JWT_AUTH_URL_RULE'] = '/login'
+
+
+def authenticate(username, password):
+    user = User.filter(User.username == username).first()
+    if user and user.password.check_password(password):
+        return user
+
+    return None
+
+
+def identity(payload):
+    user_id = payload['identity']
+    try:
+        return User.get(id=user_id)
+    except User.DoesNotExist:
+        return None
+
+
+jwt = JWT(app, authenticate, identity)
 
 
 @app.before_request
 def before_request():
-    g.user = current_user
-
-
-@login_manager.user_loader
-def load_user(id):
-    return User.get(id=int(id))
+    g.user = current_identity
 
 
 # ***************************************
 #               User API
 # ***************************************
-
-@app.route('/login', methods=['POST'])
-def login():
-    username = request.json['username']
-    password = request.json['password']
-
-    user = User.filter(User.username == username).first()
-
-    if user is None:
-        return jsonify({"message": "Incorrect password or username", "status": "error"})
-
-    if not user.password.check_password(password):
-        return jsonify({"message": "Incorrect password or username", "status": "error"})
-
-    login_user(user)
-    return jsonify({"auth": True})
-
 
 @app.route('/logout')
 def logout():
@@ -54,25 +50,19 @@ def logout():
 
 @app.route('/', methods=["GET"])
 def index():
-    # User.create(
-    #     username='test',
-    #     password='test'
-    # )
-
-    return jsonify({"status": "ok"})
+    return jsonify({"status": "OK"})
 
 
 # *****************************************
 #               Task API
 # *****************************************
 @app.route('/api/task', methods=['GET'])
-@is_auth
 def task_list():
-    return jsonify(task_schema.dump(list(Task.get_list(current_user.id)), many=True).data)
+    #return jsonify(task_schema.dump(list(Task.get_list(current_user.id)), many=True).data)
+    return jsonify(task_schema.dump(list(Task.select()), many=True).data)
 
 
 @app.route('/api/task', methods=['POST'])
-@is_auth
 def task_create():
     task, errors = task_schema.load(request.json)
 
@@ -85,7 +75,6 @@ def task_create():
 
 
 @app.route('/api/task/<int:task_id>', methods=['GET'])
-@is_auth
 def task_edit(task_id):
     task = Task.get_item(task_id, current_user.id)
 
@@ -96,7 +85,6 @@ def task_edit(task_id):
 
 
 @app.route('/api/task/<int:task_id>', methods=['PUT'])
-@is_auth
 def task_update(task_id):
     task = Task.get_item(task_id, current_user.id)
 
@@ -114,7 +102,6 @@ def task_update(task_id):
 
 
 @app.route('/api/task/<int:task_id>', methods=['DELETE'])
-@is_auth
 def task_delete(task_id):
     task = Task.get_item(task_id, current_user.id)
 
@@ -130,13 +117,12 @@ def task_delete(task_id):
 #               Project API
 # ****************************************
 @app.route('/api/project', methods=['GET'])
-@is_auth
 def project_list():
-    return jsonify(project_schema.dump(list(Project.get_list(current_user.id)), many=True).data)
+    return jsonify(project_schema.dump(list(Project.select()), many=True).data)
+    #return jsonify(project_schema.dump(list(Project.get_list(current_user.id)), many=True).data)
 
 
 @app.route('/api/project', methods=['POST'])
-@is_auth
 def project_create():
     project, errors = project_schema.load(request.json)
 
@@ -150,7 +136,6 @@ def project_create():
 
 
 @app.route('/api/project/<int:project_id>', methods=['PUT'])
-@is_auth
 def project_update(project_id):
     try:
         project = Project.get(id=project_id, user=current_user.id)
@@ -168,7 +153,6 @@ def project_update(project_id):
 
 
 @app.route('/api/project/<int:project_id>', methods=['DELETE'])
-@is_auth
 def project_delete(project_id):
     try:
         project = Project.get(id=project_id, user=current_user.id)

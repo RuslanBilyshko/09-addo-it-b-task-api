@@ -53,3 +53,7 @@ crashlytics-build.properties
 fabric.properties
 /database.db
 
+Будет удалено .idea/09-addo-it-b-task-api.iml
+Будет удалено .idea/inspectionProfiles/
+Будет удалено .idea/misc.xml
+Будет удалено .idea/modules.xml
