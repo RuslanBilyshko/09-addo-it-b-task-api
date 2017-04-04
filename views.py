@@ -5,13 +5,15 @@ from var_dump import var_dump
 from models import User, Project, Task, initialize
 from schemas import user_schema, project_schema, task_schema
 from flask_cors import CORS
-from flask.ext.jwt import JWT, jwt_required, current_identity
+from flask_jwt import JWT, jwt_required, current_identity
 
 app = Flask(__name__)
 app.secret_key = 'super secret key'
 CORS(app=app)
 
 app.config['JWT_AUTH_URL_RULE'] = '/login'
+
+token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYmYiOjE0OTEzMzQyNTQsImV4cCI6MTQ5MTMzNDU1NCwiaWF0IjoxNDkxMzM0MjU0LCJpZGVudGl0eSI6MX0.yNLxjMD_LphqPgndTAHhOfZ4RC3fxhGWKGzJtzjH5Kc"
 
 
 def authenticate(username, password):
@@ -49,6 +51,7 @@ def logout():
 
 
 @app.route('/', methods=["GET"])
+@jwt_required()
 def index():
     # Project.create(
     #     name="Project Job 1",
@@ -117,6 +120,8 @@ def index():
     #     project=2
     # )
 
+    var_dump(current_identity.id)
+
     return jsonify({"status": "OK"})
 
 
@@ -124,6 +129,7 @@ def index():
 #               Task API
 # *****************************************
 @app.route('/api/task', methods=['GET'])
+@jwt_required()
 def task_list():
     # return jsonify(task_schema.dump(list(Task.get_list(current_user.id)), many=True).data)
 
@@ -145,15 +151,18 @@ def task_list():
         if 'page' in params.keys():
             page = params.pop('page')
 
-        tasks = Task.filter(**params).paginate(page=int(page), paginate_by=paginate_by)
+        tasks = Task.filter(**params) \
+            .join(Project) \
+            .where(Project.user == current_identity.id)\
+            .paginate(page=int(page), paginate_by=paginate_by)
 
         if ordered:
             tasks = tasks.order_by(ordered)
-
-        print(tasks)
-        tasks = tasks
     else:
-        tasks = Task.select().paginate(page=page, paginate_by=paginate_by)
+        tasks = Task.select() \
+            .join(Project) \
+            .where(Project.user == current_identity.id)\
+            .paginate(page=page, paginate_by=paginate_by)
 
     return jsonify(task_schema.dump(list(tasks), many=True).data)
 
