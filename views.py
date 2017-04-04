@@ -127,8 +127,9 @@ def index():
 def task_list():
     # return jsonify(task_schema.dump(list(Task.get_list(current_user.id)), many=True).data)
 
-    # ?project=2&priority=0
-    # ?date__gte=2017-04-01&date__lte=2017-04-26
+    # Используйте следующие параметры для фильтрации
+    # project, priority, date, date_lte, date_gte
+    # Для указания страницы - page
 
     params = request.args.to_dict()
     page = 1
