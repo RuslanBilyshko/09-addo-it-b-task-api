@@ -50,6 +50,73 @@ def logout():
 
 @app.route('/', methods=["GET"])
 def index():
+    # Project.create(
+    #     name="Project Job 1",
+    #     color="#f8f8f8",
+    #     user = 1
+    # )
+
+    # Project.create(
+    #     name="Project Job 2",
+    #     color="#f8f8f8",
+    #     user=1
+    # )
+    #
+    # Project.create(
+    #     name="Project Job 3",
+    #     color="#808080",
+    #     user=1
+    # )
+    #
+    # Project.create(
+    #     name="Project Job 4",
+    #     color="#C0C0C0",
+    #     user=1
+    # )
+    #
+    # Project.create(
+    #     name="Project Job 2",
+    #     color="#f8f8f8",
+    #     user=1
+    # )
+    #
+    # Project.create(
+    #     name="Project Job 3",
+    #     color="#808080",
+    #     user=1
+    # )
+    #
+    # Project.create(
+    #     name="Project Job 4",
+    #     color="#C0C0C0",
+    #     user=1
+    # )
+
+    # Task.create(
+    #     title="Test Task 1",
+    #     date="2017-04-20",
+    #     project=1,
+    #
+    # )
+    #
+    # Task.create(
+    #     title="Test Task 2",
+    #     date="2017-04-25",
+    #     project=1
+    # )
+    #
+    # Task.create(
+    #     title="Test Task 3",
+    #     date="2017-05-04",
+    #     project=2
+    # )
+    #
+    # Task.create(
+    #     title="Test Task 4",
+    #     date="2017-06-20",
+    #     project=2
+    # )
+
     return jsonify({"status": "OK"})
 
 
@@ -58,8 +125,36 @@ def index():
 # *****************************************
 @app.route('/api/task', methods=['GET'])
 def task_list():
-    #return jsonify(task_schema.dump(list(Task.get_list(current_user.id)), many=True).data)
-    return jsonify(task_schema.dump(list(Task.select()), many=True).data)
+    # return jsonify(task_schema.dump(list(Task.get_list(current_user.id)), many=True).data)
+
+    # ?project=2&priority=0
+    # ?date__gte=2017-04-01&date__lte=2017-04-26
+
+    params = request.args.to_dict()
+    page = 1
+    paginate_by = 1
+
+    if params:
+
+        ordered = None
+
+        if 'order_by' in params.keys():
+            ordered = params.pop('order_by')
+
+        if 'page' in params.keys():
+            page = params.pop('page')
+
+        tasks = Task.filter(**params).paginate(page=int(page), paginate_by=paginate_by)
+
+        if ordered:
+            tasks = tasks.order_by(ordered)
+
+        print(tasks)
+        tasks = tasks
+    else:
+        tasks = Task.select().paginate(page=page, paginate_by=paginate_by)
+
+    return jsonify(task_schema.dump(list(tasks), many=True).data)
 
 
 @app.route('/api/task', methods=['POST'])
@@ -119,7 +214,7 @@ def task_delete(task_id):
 @app.route('/api/project', methods=['GET'])
 def project_list():
     return jsonify(project_schema.dump(list(Project.select()), many=True).data)
-    #return jsonify(project_schema.dump(list(Project.get_list(current_user.id)), many=True).data)
+    # return jsonify(project_schema.dump(list(Project.get_list(current_user.id)), many=True).data)
 
 
 @app.route('/api/project', methods=['POST'])
@@ -155,7 +250,8 @@ def project_update(project_id):
 @app.route('/api/project/<int:project_id>', methods=['DELETE'])
 def project_delete(project_id):
     try:
-        project = Project.get(id=project_id, user=current_user.id)
+        pass
+        # project = Project.get(id=project_id, user=current_user.id)
     except Project.DoesNotExist:
         return jsonify({
             "message": "Can't find project with id - `{id}`".format(id=project_id),
@@ -170,7 +266,8 @@ def project_delete(project_id):
 
     Project.delete().where(Project.id == project_id).execute()
 
-    return jsonify({"message": "The project has been successfully deleted", "status": "success"}), 410
+    # return jsonify({"message": "The project has been successfully deleted", "status": "success"}), 201
+    return jsonify({"id": project_id}), 201
 
 
 if __name__ == '__main__':

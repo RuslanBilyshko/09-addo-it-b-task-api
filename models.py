@@ -12,11 +12,14 @@ def initialize():
 
     try:
 
+
         User.create(
             id=1,
             username='root',
             password='123'
         )
+
+
 
 
     except pw.IntegrityError:
