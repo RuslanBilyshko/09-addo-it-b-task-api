@@ -140,6 +140,7 @@ def task_list():
     params = request.args.to_dict()
     page = 1
     paginate_by = 1
+    ordered = None
 
     if params:
 
@@ -151,20 +152,13 @@ def task_list():
         if 'page' in params.keys():
             page = params.pop('page')
 
-        tasks = Task.filter(**params) \
-            .join(Project) \
-            .where(Project.user == current_identity.id)\
-            .paginate(page=int(page), paginate_by=paginate_by)
-
-        if ordered:
-            tasks = tasks.order_by(ordered)
-    else:
-        tasks = Task.select() \
-            .join(Project) \
-            .where(Project.user == current_identity.id)\
-            .paginate(page=page, paginate_by=paginate_by)
-
-    return jsonify(task_schema.dump(list(tasks), many=True).data)
+    return jsonify(task_schema.dump(list(Task.get_list(
+        current_user_id=current_identity.id,
+        page=page,
+        paginate_by=paginate_by,
+        ordered=ordered,
+        params=params
+    )), many=True).data)
 
 
 @app.route('/api/task', methods=['POST'])

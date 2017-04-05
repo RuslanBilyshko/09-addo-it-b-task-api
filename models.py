@@ -62,7 +62,7 @@ class Project(BaseModel):
         return Project.select().where(Project.id == project_id, Project.user == current_user_id)
 
     @classmethod
-    def get_list(cls, current_user_id):
+    def get_list(cls, current_user_id, ):
         return Project.select().where(Project.user == current_user_id)
 
 
@@ -82,7 +82,24 @@ class Task(BaseModel):
 
     # Получение списка задач с фильтрацией на текущего пользователя
     @classmethod
-    def get_list(cls, current_user_id):
-        return Task.select() \
-            .join(Project) \
-            .where(Project.user == current_user_id)
+    def get_list(cls, current_user_id=1, params=None, page=1, paginate_by=1, ordered='id'):
+        tasks = []
+
+        if params:
+            tasks = Task.filter(**params) \
+                .join(Project) \
+                .where(Project.user == current_user_id) \
+                .order_by(ordered)\
+                .paginate(page=int(page), paginate_by=paginate_by)
+        else:
+            tasks = Task.select() \
+                .join(Project) \
+                .where(Project.user == current_user_id) \
+                .order_by(ordered)\
+                .paginate(page=int(page), paginate_by=paginate_by)
+
+        # if ordered:
+        #     tasks = tasks.order_by(ordered)
+
+
+        return tasks
